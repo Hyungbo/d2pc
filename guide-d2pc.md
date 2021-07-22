@@ -6,7 +6,7 @@
    - If your (A,B,C) is in continuous-time, use `c2d` command of MATLAB to get discrete-time (A,B,C). 
    - This will be the real plant, which will be learned by D2PC and used for simulation.
 2. Let the simulator know your plant.
-   - Find the function `f_DefinePlant` at the end of the m-file (`sim_d2pc.m')
+   - Find the function `f_DefinePlant` at the end of the m-file (`sim_d2pc.m`)
    - Give it a name and write a `case` statement, as done for other examples in `f_DefinePlant`.
    - Copy a plant description of other example in `f_DefinePlant', and modify it for your plant.
    - `Ts` is a sampling time (for continuous-time to discrete-time conversion), but it is also used for plotting the outcome by converting the discrete-time steps into continuous-time. Simply set 1 if you don't use it.
