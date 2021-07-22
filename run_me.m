@@ -5,7 +5,7 @@
 %%% (Parameters are the same as those used in the paper.)
 %%%
 %%% Nam H. Jo and H. Shim
-%%% July 16, 2021
+%%% July 22, 2021
 %%%
 %%% tested in MATLAB 2020b
 %%% with OSQP (https://osqp.org); a QP solver 
@@ -15,6 +15,16 @@
 %%% the cost function to be minimized: 
 %%% \sum_{k=0}^{N-1} ||y_k - r||^2 + ||u_k||^2
 %%%
+
+%%% OSQP or CVX is REQUIRED to solve the control input under constraints.
+%%% Specify your solver option around line 76.
+%%% If you don't have OSQP or CVX, choose the solver option = 'handful',
+%%% but the control problem is solved without constraints
+%%% (so that the outcomes are different from the paper).
+
+%%% For more testing, change the model below and 
+%%% changethe noise level An by yourself
+%%% at the end of this file where the plant is described.
 
 clear
 
@@ -64,6 +74,7 @@ switch model
 end
 
 OP.solver = 'osqp'; % solver = 'osqp' or 'cvx' or 'handful'
+%OP.solver = 'handful';
 OP.P_qp = [];   % to define QP problem
 OP.q_qp = [];   % to define QP problem
 OP.A_qp = [];   % to define QP problem
@@ -103,28 +114,26 @@ switch model
         TdeepcM = (kPE-1) + ceil(kPE/deepc.q);  % Tdeepc Multi data set
         deepc.Tsampling = TdeepcM;
         
-        % For Table 2 and 3 in the paper
-        % d2pc.NBar = 10; d2pc.Nd = 50; d2pc.Tsampling = 55
+        % Below: for Tables 2 and 3 in the paper
+        % d2pc.NBar = 14; d2pc.Nd = 50; d2pc.Tsampling = 55
         % deepc.lambda_g = 500; deepc.lambda_y = 5e5;
     case 'TwoCart'
         d2pc.NBar = 20;   
 
         deepc.Tini = 15;
-        deepc.lambda_g = 500;
-        deepc.lambda_y = 5e5;
+        deepc.lambda_g = 500;        deepc.lambda_y = 5e5;
 
-        % For Table 7 in the paper
-        % d2pc.Nd = 500; deepc.Nd = d2pc.Nd;
+        % Below: for Table 6 in the paper
+        % d2pc.Nd = 50;      deepc.Nd = d2pc.Nd;
     case 'FourTank'
-        d2pc.Tsampling = 400; 
-        d2pc.Nd = 500; 
+        d2pc.Tsampling = 400;  
         d2pc.NBar=30; 
 
         deepc.Tsampling = d2pc.Tsampling;
         deepc.Tini = 30;
-        deepc.lambda_g = 0.1;
-        deepc.lambda_y = 1000;
-        deepc.Nd = d2pc.Nd;
+        deepc.lambda_g = 0.1;        deepc.lambda_y = 1000;
+        % Below: for Table 9 in the paper
+        % d2pc.Nd = 50;        deepc.Nd = d2pc.Nd;
 end
 
 
@@ -190,7 +199,7 @@ for i = 1:Trial.no
         plot(plot_time, Ud2pc);
         figure(3)
         subplot(221);plot(plot_time, P_real.C*Xd2pc,'b');ylabel('y');hold on
-        title('Proposed');grid on; xlabel('Time [sec]')
+        grid on; xlabel('Time [sec]')
    end
 end
 FailureRatio = 1-length(MAEtable)/Trial.no;
@@ -202,16 +211,25 @@ text = sprintf('D2PC: NBar = %d, An = %g, Nd = %d, FR = %1.2f, MAE = %1.3f', ...
     d2pc.NBar,P_real.An,d2pc.Nd,FailureRatio,MAE);
 xlabel(text)
 figure(3); 
-subplot(221); 
-plot(plot_time, P_real.C*Xmpc,'r--','Linewidth',2); 
-hold off
+subplot(221);title('D2PC (Proposed)');
+if FailureRatio==1
+    title('D2PC: FailureRatio = 1')
+else
+    plot(plot_time, P_real.C*Xmpc,'r--','Linewidth',2);hold off
+end
 MAEd2pc = MAE   % to display
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Simulate: DeePC
 %%% Most of the codes in this block is for displaying.
 %%% Key functions are performed in SimulateDeePC function.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if strcmp(OP.solver, 'handful')
+    disp('DeePC is not simulated without a solver, and the code stops.')
+    return
+end
+
 rng('default');     % reset random number generator
 
 plot_time = (0:Simulation.nsim-1) * P_real.Ts;
@@ -238,7 +256,7 @@ for i = 1:Trial.no
         plot(plot_time, Udeepc);
         figure(3)
         subplot(222);plot(plot_time, P_real.C*Xdeepc,'b');ylabel('y');hold on
-        title('DeePC');grid on; xlabel('Time [sec]')
+        grid on; xlabel('Time [sec]')
    end
 end
 FailureRatio = 1-length(MAEtable)/Trial.no;
@@ -250,9 +268,12 @@ text = sprintf('DeePC: lam_y = %g, Tini = %d, An = %g, Nd = %d, q = %d, FR = %1.
     deepc.lambda_y,deepc.Tini,P_real.An,deepc.Nd,deepc.q,FailureRatio,MAE);
 xlabel(text)
 figure(3);
-subplot(222);
-plot(plot_time, P_real.C*Xmpc,'r--','Linewidth',2);
-hold off
+subplot(222);title('DeePC');
+if FailureRatio==1
+    title('DeePC: FailureRatio = 1')
+else
+    plot(plot_time, P_real.C*Xmpc,'r--','Linewidth',2);hold off
+end
 MAEd2pc         % to display
 MAEdeepc = MAE  % to display
 
@@ -937,7 +958,7 @@ switch name
         plant.ny = size(plant.C,1);         % ny = size of y
         plant.x0 = zeros(size(plant.B,1),1);  % initial condition of the plant
         plant.gen_noise = @(X,An) X + An * 2 * (rand(size(X))-0.5);
-        %plant.An = 1e-6;   % Measurement Noise Level
+        %plant.An = 1e-4;   % Measurement Noise Level
         plant.An = 0;   % Measurement Noise Level
 
     case 'TwoCart'
@@ -952,8 +973,9 @@ switch name
         [plant.nx, plant.nu] = size(plant.B);    % nx = size of x, nu = size of u
         plant.ny = size(plant.C,1);         % ny = size of y
         plant.x0 = zeros(size(plant.B,1),1);  % initial condition of the plant
-        plant.gen_noise = @(X,An) X + An * randn(size(X));
-        plant.An = 1e-2;   % Measurement Noise Level
+        plant.gen_noise = @(X,An) X + An * 2 * (rand(size(X))-0.5);
+        %plant.An = 1e-1;   % Measurement Noise Level
+        plant.An = 1e-2;   % Measurement Noise Level        
         
     case 'FourTank'
         %%% Four Tank system 
@@ -964,7 +986,7 @@ switch name
         [plant.nx, plant.nu] = size(plant.B);    % nx = size of x, nu = size of u
         plant.ny = size(plant.C,1);         % ny = size of y
         plant.x0 = zeros(size(plant.B,1),1);  % initial condition of the plant
-        plant.gen_noise = @(X,An) X + An * randn(size(X));
+        plant.gen_noise = @(X,An) X + An * 2 * (rand(size(X))-0.5);
         plant.Ts = 1;
         plant.An = 1e-1;   % Measurement Noise Level
 end
