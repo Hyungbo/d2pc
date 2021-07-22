@@ -11,5 +11,21 @@
    - `Ts` is a sampling time (for continuous-time to discrete-time conversion), but it is also used for plotting the outcome by converting the discrete-time steps into continuous-time. Simply set 1 if you don't use it.
    - `An` is the level of noise for output measurement, and the way how to generate the noise is specified in `plant.gen_noise`.
    - Note that `plant.gen_noise` is Anonymous Functions of MATLAB. If you're not familiar with it, consult https://www.mathworks.com/help/matlab/matlab_prog/anonymous-functions.html.
-3. 
+3. Specify your control specification in `run_me.m`.
+   - `OP.r`: Target setpoint to which the plant's output follows.
+   - `OP.Q`, `OP.R`, `OP.N`: Weight matrices in the cost function, and the length of optimization horizon
+   - `OP.solver`: Set as `OSQP` if you have OSQP solver; `CVX` if you have CVXR (but its performance is not very good); or `handful` if you don't have any solver but are satisfied with an analytic solution that cannot handle your input/output constraints.
+4. Set D2PC parameters. (There are only two parameters `NBar` and `Nd`.)
+   - Increasing both of them will always given you better results (at the cost of more samples and computation).
+   - As a rule of thumb, set twice or triple of your estimated order of the plant.
+   - `Nd` specifies how many times your sample episodes are averaged. Typically, 1, or 10, or 50 and so on.
+5. Run `run_me.m`.
+6. The simulation outcome briefly displays, but you can draw them by yourself. The outcomes are stored in `plot_time`, `Xd2pc`, and `Ud2pc`.
+   - `plot_time`: a row vector contains time tick of `Xd2pc` and `U2pc`
+   - `Xd2pc`: each column is a state vector at each time, grows horizontally as time goes.
+   - `Ud2pc`: each column is the input vector at each time, grows horizontally as time goes.
+
+
+
+
 
