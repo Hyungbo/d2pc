@@ -24,8 +24,9 @@ This m-file is tested in MATLAB 2020b.
 
 The m-file uses an optimization tool of either OSQP (https://osqp.org) or CVX (https://cvxr.com), which should have been installed in your MATLAB environment. (We recommend OSQP since CVX does not solve complex cases of our examples.) 
 
-For those who cannot install one of these tools, the option inside the m-file can be set 'handful', in which case the QP problem is solved without using the solvers but cannot handle the input and output constraints. 
+For those who cannot install one of these tools, the option inside the m-file can be set 'handful', in which case the QP problem is solved without using the solvers but cannot handle the input and output constraints. (In this case, the outcomes are different from those in the paper.)
 
+To run DeePC, a solver (OSQP or CVX) is required.
 
 ## Limitation
 The plant should be linear.
