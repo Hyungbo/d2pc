@@ -1,6 +1,8 @@
 # d2pc
 MATLAB Codes for Data-Driven (output-feedback) Predictive Control
 
+## Related paper
+Refer to http://arxiv.org/abs/2201.03136
 
 ## Introduction
 This is a MATLAB code set to simulate the following controllers:
