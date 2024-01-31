@@ -2,7 +2,15 @@
 MATLAB Codes for Data-Driven (output-feedback) Predictive Control
 
 ## Related paper
+
 Refer to http://arxiv.org/abs/2201.03136
+
+## Files
+
+* run_me_v4.m: Updated version of run_me.m (the newest version as of Nov 2023)
+* SimulationsInPaper.zip: Contains a few files that were used for generation of figures in the paper (Nov 2023)
+* run_me.m: The main all-in-one MATLAB code for simluation (older version)
+* d2pc: A folder that contains d2pc code only, for those who want to test D2PC (older version) 
 
 ## Introduction
 This is a MATLAB code set to simulate the following controllers:
@@ -35,3 +43,6 @@ The plant should be linear.
 
 ## Authors
 Nam Hoon Jo (nhjo@ssu.ac.kr) and Hyungbo Shim (hshim@snu.ac.kr)
+
+## Acknowledgement
+The work is supported by Hyundai Motor Company.
